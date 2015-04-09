@@ -77,19 +77,19 @@
 
   //override date format i18n
   
-  Date.monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  Date.monthNames = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
   // Month abbreviations. Change this for local month names
-  Date.monthAbbreviations = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  Date.monthAbbreviations = ["1","2","3","4","5","6","7","8","9","10","11","12"];
   // Full day names. Change this for local month names
-  Date.dayNames =["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  Date.dayNames =["日曜","月曜","火曜","水曜","木曜","金曜","土曜"];
   // Day abbreviations. Change this for local month names
-  Date.dayAbbreviations = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  Date.dayAbbreviations = ["日","月","火","水","木","金","土"];
   // Used for parsing ambiguous dates like 1/2/2000 - default to preferring 'American' format meaning Jan 2.
   // Set to false to prefer 'European' format meaning Feb 1
   Date.preferAmericanFormat = false;
 
-  Date.firstDayOfWeek =1;
-  Date.defaultFormat = "dd/MM/yyyy";
+  Date.firstDayOfWeek =0;
+  Date.defaultFormat = "yyyy/MM/dd";
 
 
   Number.decimalSeparator = ".";
@@ -101,6 +101,7 @@
 
   var millisInWorkingDay =36000000;
   var workingDaysPerWeek =5;
+  var holidaysCache      ={};
 
   function isHoliday(date) {
     var friIsHoly =false;
@@ -112,29 +113,40 @@
       return val.substr(val.length - 2);
     };
 
-    var holidays = "#01_01#04_25#08_15#11_01#12_25#12_26#06_02#12_08#05_01#2010_04_05#2010_10_19#2010_05_15#2011_04_04#";
-
     var ymd = "#" + date.getFullYear() + "_" + pad(date.getMonth() + 1) + "_" + pad(date.getDate()) + "#";
-    var md = "#" + pad(date.getMonth() + 1) + "_" + pad(date.getDate()) + "#";
     var day = date.getDay();
+    var y = date.getFullYear();
+    
+    // build holidays of the specified year
+    if ( !(y in holidaysCache) ) {
+      var arr = [];
+      var dateTmp = new Date(y, 0, 1);
+      do {
+        if (dateTmp.isHoliday()) {
+          arr.push( y + "_" + pad(dateTmp.getMonth() + 1) + "_" + pad(dateTmp.getDate()) );
+        }
+        dateTmp.setDate(dateTmp.getDate() + 1);
+      } while (dateTmp.getFullYear() == y);
+      holidaysCache[y] = "#" + arr.join("#") + "#";
+    }
 
-    return  (day == 5 && friIsHoly) || (day == 6 && satIsHoly) || (day == 0 && sunIsHoly) || holidays.indexOf(ymd) > -1 || holidays.indexOf(md) > -1;
+    return  (day == 5 && friIsHoly) || (day == 6 && satIsHoly) || (day == 0 && sunIsHoly) || holidaysCache[y].indexOf(ymd) > -1;
   }
 
 
   
   var i18n = {
-    FORM_IS_CHANGED:"You have some unsaved data on the page!",
-    YES:"yes",
-    NO:"no",
-    FLD_CONFIRM_DELETE:"confirm the deletion?",
-    INVALID_DATA:"The data inserted are invalid for the field format.",
-    ERROR_ON_FIELD:"Error on field",
-    CLOSE_ALL_CONTAINERS:"close all?",
+    FORM_IS_CHANGED:"編集が未保存です",
+    YES:"はい",
+    NO:"いいえ",
+    FLD_CONFIRM_DELETE:"削除を行いますか？",
+    INVALID_DATA:"挿入されたデータの形式が無効です。",
+    ERROR_ON_FIELD:"フィールドエラー",
+    CLOSE_ALL_CONTAINERS:"全て閉じますか？",
 
 
 
-    DO_YOU_CONFIRM:"Do you confirm?"
+    DO_YOU_CONFIRM:"これでよろしいですか？"
   };
 
   
